@@ -1,0 +1,23 @@
+# JetBrains IDE
+/shelf/
+/workspace.xml
+/httpRequests/
+/vcs.xml
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# 환경변수 / 비밀키
+.env
+.streamlit/secrets.toml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 프로젝트: LLM 캐시는 커밋 제외, 전처리 결과(pieces)는 커밋 포함
+data/cache/*.json
