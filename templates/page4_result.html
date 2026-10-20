@@ -1,0 +1,104 @@
+<div class="min-h-screen p-4 sm:p-8 md:p-10 selection:bg-archive-craft selection:text-archive-dark">
+    <div class="mb-6 text-center sm:text-left">
+        <span class="font-mono text-xs text-archive-terracotta uppercase tracking-widest block mb-1">04. CURATED ARTWORK CATALOGUE</span>
+        <h2 class="text-2xl sm:text-3xl font-serif font-bold text-archive-paper">완성된 아카이브 도록</h2>
+        <p class="text-xs sm:text-sm text-archive-craft mt-1 font-light">수집된 소스들이 정제된 시각적 콜라주와 담백한 해설로 재구성되었습니다.</p>
+    </div>
+
+    <div class="flex justify-center mb-8">
+        <div class="torn-paper torn-edge-top-bottom max-w-2xl w-full p-6 sm:p-10 relative">
+            <div class="tape-strip w-24 -top-2 right-16 rotate-[-2deg]"></div>
+
+            <div class="flex justify-between items-end border-b-2 border-archive-dark pb-4 mb-6">
+                <div>
+                    <span class="font-mono text-[10px] text-archive-terracotta uppercase tracking-wider block mb-1">CATALOGUE PIECE</span>
+                    <h3 class="font-serif font-bold text-xl text-archive-dark" id="result-date-header">—</h3>
+                </div>
+                <div class="text-right">
+                    <span class="inline-block px-2.5 py-1 bg-archive-dark text-archive-paper font-mono text-[10px] uppercase font-bold" id="result-persona-badge">—</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 mb-6" id="result-collage-layout"></div>
+
+            <div class="editorial-line p-5 border border-archive-craft bg-archive-paper/80 mb-5">
+                <span class="font-mono text-[9px] text-archive-terracotta uppercase tracking-widest block mb-1">CURATORIAL COMMENT:</span>
+                <p class="text-xs sm:text-sm font-serif text-archive-dark leading-[32px]" id="result-poetic-story">—</p>
+            </div>
+
+            <div class="bg-archive-craft/20 p-3 text-xs text-archive-muted font-serif mb-5 flex justify-between items-center">
+                <div>
+                    <span class="font-mono text-[9px] text-archive-terracotta uppercase block">QUOTED TEXT</span>
+                    <span class="text-archive-dark italic" id="result-original-quote">—</span>
+                </div>
+                <span class="font-mono text-[10px] text-archive-muted" id="result-tags">—</span>
+            </div>
+
+            <div class="pt-3 border-t border-archive-craft/60 flex justify-between items-center font-mono text-[9px] text-archive-muted">
+                <span>LIAOLLET ATTIC TASTE ARCHIVE</span>
+                <span>EDITION NO. 042 / 500</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const d = window.PAGE_DATA || {};
+    const persona = d.persona || 'lia';
+    const quote = d.quote || '';
+    const story = d.poetic_story || '—';
+    const tags = d.tags || [];
+    const photos = d.photos || [];
+    const mainImg = photos[0] || '';
+    const subImg = photos[1] || mainImg;
+    const date = d.date || '2026.10.19';
+
+    document.getElementById('result-date-header').innerText = date + ' / ATTIC ARCHIVE';
+    document.getElementById('result-persona-badge').innerText = persona.toUpperCase() + ' ASPECT';
+    document.getElementById('result-poetic-story').innerText = story;
+    document.getElementById('result-original-quote').innerText = '"' + quote + '"';
+    document.getElementById('result-tags').innerText = tags.length ? tags.join(' ') : '#취향아카이브';
+
+    const layout = document.getElementById('result-collage-layout');
+
+    if (persona === 'lia') {
+        layout.innerHTML = `
+            <div class="sm:col-span-7 contact-sheet p-2 rounded-xs">
+                <img src="${mainImg}" class="w-full h-48 sm:h-56 object-cover filter grayscale contrast-125">
+                <span class="font-mono text-[8px] text-archive-craft/60 block text-right mt-1">LIA SILHOUETTE FRAME</span>
+            </div>
+            <div class="sm:col-span-5 flex flex-col justify-between border border-archive-craft p-4 bg-archive-paper/60">
+                <div class="font-mono text-[9px] text-archive-terracotta mb-2">FRAGMENT LAYER</div>
+                <p class="font-serif text-xs leading-relaxed text-archive-dark italic mb-3">"${quote}"</p>
+                <div class="h-20 contact-sheet p-1">
+                    <img src="${subImg}" class="w-full h-full object-cover opacity-80">
+                </div>
+            </div>`;
+    } else if (persona === 'ol') {
+        layout.innerHTML = `
+            <div class="sm:col-span-5 border border-archive-craft p-3 relative bg-archive-craft/30 torn-edge-top-bottom">
+                <div class="tape-strip w-16 -top-2 left-2 rotate-[-4deg]"></div>
+                <img src="${subImg}" class="w-full h-36 object-cover border border-archive-dark/40 mb-2">
+                <span class="font-serif text-[10px] text-archive-dark block text-center italic">Scrapbook Texture Layer</span>
+            </div>
+            <div class="sm:col-span-7 contact-sheet p-2">
+                <img src="${mainImg}" class="w-full h-48 sm:h-56 object-cover">
+                <div class="flex justify-between font-mono text-[8px] text-archive-craft/60 mt-1">
+                    <span>OL VISUAL COLLAGE</span><span>${date}</span>
+                </div>
+            </div>`;
+    } else {
+        layout.innerHTML = `
+            <div class="sm:col-span-12 contact-sheet p-3 relative">
+                <div class="grid grid-cols-2 gap-2">
+                    <img src="${mainImg}" class="w-full h-40 object-cover">
+                    <img src="${subImg}" class="w-full h-40 object-cover filter sepia-[0.3]">
+                </div>
+                <div class="mt-2 font-mono text-[9px] text-archive-craft/70 flex justify-between">
+                    <span>SYNTHESIS OVERLAY FRAME</span><span>LET COMPONENT</span>
+                </div>
+            </div>`;
+    }
+})();
+</script>
