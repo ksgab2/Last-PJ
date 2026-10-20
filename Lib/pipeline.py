@@ -71,7 +71,7 @@ FALLBACK_STORY = {
     "let": "서로 다른 층위의 조각들이 겹쳐지며 하나의 장면으로 정리됩니다. 다층의 언어가 은은하게 공명합니다.",
 }
 
-MAX_IMAGE_SIDE = 1024
+MAX_IMAGE_SIDE = 512
 MAX_IMAGES = 5
 
 
@@ -115,7 +115,7 @@ def _strip_exif_and_resize(raw: bytes) -> bytes:
         img = img.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
 
     buf = BytesIO()
-    img.save(buf, format="JPEG", quality=85, optimize=True)
+    img.save(buf, format="JPEG", quality=75, optimize=True)
     return buf.getvalue()
 
 

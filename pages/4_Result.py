@@ -1,19 +1,27 @@
 import streamlit as st
 
-from Lib.render import render_page
 
-if "entry_result" not in st.session_state:
-    st.warning("먼저 Entry에서 분석을 실행하세요.")
-    st.stop()
+from Lib.supabase_client import get_supabase
 
-r = st.session_state.entry_result
-render_page("page4_result", data=r, height=1100)
+# ... (기존 Result 렌더링 코드) ...
 
-c1, c2 = st.columns(2)
-with c1:
-    if st.button("← BACK", use_container_width=True):
-        st.switch_page("pages/3_Entry.py")
-with c2:
-    if st.button("SAVE TO SHELVES →", use_container_width=True, type="primary"):
-        st.session_state.setdefault("archive", []).append(r)
+if st.button("SAVE TO SHELVES →", type="primary"):
+    result = st.session_state.entry_result
+    supabase = get_supabase()
+
+    # dict에서 필요한 컬럼만 골라서 저장
+    row = {
+        "persona": result["persona"],
+        "quote": result["quote"],
+        "poetic_story": result["poetic_story"],
+        "tags": result["tags"],
+        "photos": result["photos"],  # base64 문자열 배열
+        "likes": 0,
+    }
+
+    try:
+        supabase.table("entries").insert(row).execute()
+        st.success("서가에 저장되었습니다!")
         st.switch_page("pages/5_Shelves.py")
+    except Exception as e:
+        st.error(f"저장 실패: {e}")
