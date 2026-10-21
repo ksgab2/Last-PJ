@@ -1,112 +1,226 @@
 import streamlit as st
-from pathlib import Path
-import streamlit.components.v1 as components
 
-# 1. 템플릿 로드
-TPL = Path(__file__).parent.parent / "templates"
-head = (TPL / "head.html").read_text(encoding="utf-8")
-body = (TPL / "page2_aspect.html").read_text(encoding="utf-8")
+# 1. HTML 구조 (기존 디자인 유지)
+html_content = """
+<div class="aspect-container">
+    <div class="header">
+        <span class="subtitle">02. EXPRESSIONAL COMPONENT</span>
+        <h2>아트워크를 구성할 주요 시선 레이어</h2>
+        <p>결과물을 이루는 LIA, OL, LET 중 어떤 조형적 관점에 비중을 둘지 선택합니다.</p>
+    </div>
 
-# 2. 현재 선택된 값에 따라 카드를 강조하는 JS
-current_aspect = st.session_state.get("aspect", "")
-highlight_js = f"""
-<script>
-document.addEventListener("DOMContentLoaded", () => {{
-    const selected = "{current_aspect}";
-    if (selected) {{
-        const card = document.getElementById('aspect-' + selected);
-        if (card) {{
-            card.classList.remove('border-transparent');
-            card.classList.add('border-archive-dark', 'bg-archive-craft/20');
-            const icon = card.querySelector('.check-icon');
-            if (icon) icon.className = 'fa-solid fa-circle-check check-icon text-sm text-archive-terracotta';
-        }}
-    }}
-}});
-</script>
+    <div class="cards-wrapper">
+        <!-- LIA -->
+        <div class="aspect-card" id="lia" data-id="lia">
+            <div class="card-visual film-frame">
+                <div class="frame-header"><span>FILM #01</span><span>SILHOUETTE</span></div>
+                <div class="frame-body"><div class="silhouette-mock"></div></div>
+            </div>
+            <div class="card-content">
+                <div class="title-row"><h3>LIA</h3><span class="role">Text & Silhouette</span></div>
+                <p>문장의 잔상과 필름 프레임 속 피사체의 <strong>여백, 실루엣, 텍스트 서사</strong> 중심의 정제된 조형.</p>
+            </div>
+            <div class="card-footer"><span>#문장잔상 #실루엣</span><span class="check">✓</span></div>
+        </div>
+
+        <!-- OL -->
+        <div class="aspect-card" id="ol" data-id="ol">
+            <div class="card-visual film-frame">
+                <div class="frame-header"><span>COLLAGE #02</span><span>TEXTURE</span></div>
+                <div class="frame-body"><div class="texture-mock"></div></div>
+            </div>
+            <div class="card-content">
+                <div class="title-row"><h3>OL</h3><span class="role">Visual & Texture</span></div>
+                <p>찢어진 수제 종이의 거친 질감, <strong>색면 구도와 시각적 파편</strong>이 만들어내는 명확한 시각성.</p>
+            </div>
+            <div class="card-footer"><span>#종이질감 #시각파편</span><span class="check">✓</span></div>
+        </div>
+
+        <!-- LET -->
+        <div class="aspect-card" id="let" data-id="let">
+            <div class="card-visual film-frame">
+                <div class="frame-header"><span>OVERLAY #03</span><span>SYNTHESIS</span></div>
+                <div class="frame-body"><div class="layer-mock">LAYER</div></div>
+            </div>
+            <div class="card-content">
+                <div class="title-row"><h3>LET</h3><span class="role">Synthesis & Layer</span></div>
+                <p>필름 네거티브와 텍스트, <strong>다층 오버레이 조화</strong>로 완성되는 차분하고 완성도 높은 융합.</p>
+            </div>
+            <div class="card-footer"><span>#오버레이 #다층조화</span><span class="check">✓</span></div>
+        </div>
+    </div>
+</div>
 """
 
-# 3. HTML 렌더링 (카드 부분만)
-html = head.replace("</head>", f"<body>{body}{highlight_js}</body></html>")
-components.html(html, height=550, scrolling=False)
+# 2. CSS 스타일 (Shadow DOM 내부에서 동작하도록 설계)
+css_content = """
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Space+Mono&display=swap');
 
-# 4. 텍스트와 버튼을 하나의 검은색 영역으로 묶는 CSS 적용
-st.markdown("""
-<style>
-    /* 1. 텍스트가 들어가는 상단 검은색 박스 */
-    .dark-selector-box {
-        background-color: #2A2825;
-        padding: 10px 30px 0px 30px; /* 위쪽은 여백, 아래쪽은 버튼과 붙도록 0 */
-        margin-top: -20px; /* iframe과 자연스럽게 이어지도록 */
-        text-align: center;
+body {
+    background-color: #2A2825;
+    margin: 0;
+    padding: 20px;
+    font-family: 'Noto Serif KR', serif;
+    color: #F5F2EC;
+    box-sizing: border-box;
+}
+.header { margin-bottom: 30px; }
+.header .subtitle { font-family: 'Space Mono', monospace; font-size: 12px; color: #9B4028; letter-spacing: 0.1em; text-transform: uppercase; }
+.header h2 { font-size: 28px; margin: 5px 0; }
+.header p { font-size: 14px; color: #D3C9B8; margin: 0; }
+
+.cards-wrapper {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    perspective: 1000px;
+}
+
+.aspect-card {
+    background-color: #F5F2EC;
+    padding: 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    transform-style: preserve-3d;
+    transition: opacity 0.4s ease;
+    border: 2px solid transparent;
+}
+
+.card-visual {
+    background-color: #1C1A18;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 2px;
+}
+.frame-header { display: flex; justify-content: space-between; font-family: 'Space Mono', monospace; font-size: 9px; color: #6E675F; margin-bottom: 15px; }
+.frame-body { height: 100px; display: flex; align-items: center; justify-content: center; position: relative; }
+
+/* 카드 내부 그래픽 목업 */
+.silhouette-mock { width: 30px; height: 50px; background: #D3C9B8; border: 1px solid #6E675F; }
+.texture-mock { width: 60px; height: 50px; background: #9B4028; opacity: 0.7; transform: rotate(15deg); }
+.layer-mock { width: 60px; height: 60px; border: 1px solid #D3C9B8; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 10px; color: #D3C9B8; }
+
+.card-content { color: #2A2825; }
+.title-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.title-row h3 { font-size: 20px; margin: 0; }
+.title-row .role { font-family: 'Space Mono', monospace; font-size: 10px; color: #9B4028; text-transform: uppercase; }
+.card-content p { font-size: 12px; color: #6E675F; line-height: 1.5; margin-bottom: 15px; }
+
+.card-footer { display: flex; justify-content: space-between; font-family: 'Space Mono', monospace; font-size: 10px; color: #6E675F; border-top: 1px solid #D3C9B8; padding-top: 10px; }
+.check { opacity: 0; color: #9B4028; font-weight: bold; transition: opacity 0.3s; }
+
+/* 선택된 상태 (Selected) */
+.aspect-card.selected { border-color: #9B4028; }
+.aspect-card.selected .check { opacity: 1; }
+/* 선택되지 않은 상태 (Dimmed) */
+.aspect-card.dimmed { opacity: 0.3; transform: scale(0.95); }
+"""
+
+# 3. JavaScript (GSAP 애니메이션 및 Python 통신)
+js_content = """
+export default function(component) {
+    const { parentElement, setTriggerValue } = component;
+    const data = window.PAGE_DATA || {};
+    const currentSelected = data.selected;
+
+    // GSAP 라이브러리 동적 로드
+    const script = document.createElement('script');
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js";
+    script.onload = () => {
+        initAnimations();
+    };
+    document.head.appendChild(script);
+
+    function initAnimations() {
+        const cards = parentElement.querySelectorAll('.aspect-card');
+
+        // 이전에 선택한 카드가 있으면 상태 복원
+        if (currentSelected) {
+            cards.forEach(card => {
+                if (card.dataset.id === currentSelected) {
+                    card.classList.add('selected');
+                    gsap.set(card, { scale: 1.05, zIndex: 10 });
+                } else {
+                    card.classList.add('dimmed');
+                }
+            });
+        }
+
+        cards.forEach(card => {
+            // 1. 마우스 호버 애니메이션
+            card.addEventListener('mouseenter', () => {
+                if (card.classList.contains('dimmed')) return;
+                gsap.to(card, { scale: 1.05, y: -10, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)", duration: 0.3, ease: "power2.out" });
+            });
+            card.addEventListener('mouseleave', () => {
+                if (card.classList.contains('dimmed')) return;
+                const isSelected = card.classList.contains('selected');
+                gsap.to(card, { scale: isSelected ? 1.05 : 1, y: 0, boxShadow: isSelected ? "0 10px 20px rgba(0,0,0,0.3)" : "0 10px 20px rgba(0,0,0,0.3)", duration: 0.3, ease: "power2.out" });
+            });
+
+            // 2. 클릭 애니메이션 및 Python 전송
+            card.addEventListener('click', () => {
+                const id = card.dataset.id;
+
+                cards.forEach(c => {
+                    if (c === card) {
+                        c.classList.add('selected');
+                        c.classList.remove('dimmed');
+                        gsap.to(c, { scale: 1.05, y: 0, zIndex: 10, duration: 0.5, ease: "back.out(1.5)" });
+                    } else {
+                        c.classList.remove('selected');
+                        c.classList.add('dimmed');
+                        gsap.to(c, { scale: 0.95, y: 0, zIndex: 1, duration: 0.5, ease: "power2.out" });
+                    }
+                });
+
+                // Python으로 클릭한 ID 전송
+                setTriggerValue("selected_aspect", id);
+            });
+        });
     }
-    .dark-selector-box h4 {
-        color: #F5F2EC;
-        font-family: 'Noto Serif KR', serif;
-        margin: 0;
-        padding-bottom: 10px;
-    }
+}
+"""
 
-    /* 2. 버튼 컬럼을 감싸는 영역의 배경을 검은색으로 변경 */
-    /* st.columns 바로 위의 stMarkdown 다음에 오는 horizontal block을 타겟팅 */
-    div[data-testid="stHorizontalBlock"] {
-        background-color: #2A2825;
-        padding: 10px 30px 30px 30px;
-        margin-top: 0px;
-        border-radius: 0px 0px 8px 8px; /* 아래쪽 모서리만 둥글게 */
-    }
+# 4. 커스텀 컴포넌트 등록
+aspect_selector_component = st.components.v2.component(
+    name="gsap_aspect_selector",
+    html=html_content,
+    css=css_content,
+    js=js_content,
+)
 
-    /* 3. 버튼 기본 스타일 (검은 배경에 어울리게) */
-    div[data-testid="stHorizontalBlock"] button {
-        border: 1px solid #6E675F;
-        color: #F5F2EC;
-        background-color: transparent;
-        transition: all 0.3s ease;
-    }
+# 5. Python 상태 관리
+current = st.session_state.get("aspect")
 
-    /* 마우스 호버 시 */
-    div[data-testid="stHorizontalBlock"] button:hover {
-        border-color: #F5F2EC;
-        color: #FFFFFF;
-        background-color: rgba(245, 242, 236, 0.1);
-    }
 
-    /* 선택된 경우 (type="primary") */
-    div[data-testid="stHorizontalBlock"] button[kind="primary"] {
-        background-color: #9B4028; /* 테라코타 색상 */
-        color: #FFFFFF;
-        border: 1px solid #9B4028;
-    }
-</style>
+# 콜백 함수 정의 (JS에서 값이 넘어오면 실행됨)
+def on_aspect_change():
+    val = st.session_state.gsap_aspect_selector.selected_aspect
+    if val and val != st.session_state.get("aspect"):
+        st.session_state.aspect = val
+        # 상태만 업데이트하고 화면은 그대로 둡니다.
 
-<div class="dark-selector-box">
-    <h4>위 카드 중 하나를 선택하세요</h4>
-</div>
-""", unsafe_allow_html=True)
 
-# 5. 버튼 3개 배치
-c1, c2, c3 = st.columns(3)
+# 컴포넌트 렌더링 (Python 데이터를 JS로 전달)
+aspect_selector_component(
+    key="gsap_aspect_selector",
+    on_selected_aspect_change=on_aspect_change,
+    data={"selected": current}
+)
 
-with c1:
-    if st.button("LIA 선택", use_container_width=True, type="primary" if current_aspect == "lia" else "secondary"):
-        st.session_state.aspect = "lia"
-        st.rerun()
-
-with c2:
-    if st.button("OL 선택", use_container_width=True, type="primary" if current_aspect == "ol" else "secondary"):
-        st.session_state.aspect = "ol"
-        st.rerun()
-
-with c3:
-    if st.button("LET 선택", use_container_width=True, type="primary" if current_aspect == "let" else "secondary"):
-        st.session_state.aspect = "let"
-        st.rerun()
-
+# ==========================================
+# 6. 하단 UI (선택 후 다음 단계 버튼)
+# ==========================================
 st.markdown("<br>", unsafe_allow_html=True)
 
-# 6. 선택 완료 후 다음 단계로 이동
-if current_aspect:
-    st.success(f"✅ **{current_aspect.upper()}** 스타일이 선택되었습니다.")
+# 컴포넌트의 콜백이 갱신한 세션 상태를 다시 읽어옵니다.
+current = st.session_state.get("aspect")
+
+if current:
+    st.success(f"✅ **{current.upper()}** 스타일이 선택되었습니다.")
 
     col_back, col_next = st.columns([1, 2])
     with col_back:
@@ -114,7 +228,8 @@ if current_aspect:
             st.switch_page("pages/1_Cover.py")
     with col_next:
         if st.button("NEXT → ENTRY", use_container_width=True, type="primary"):
-            st.switch_page("pages/4_Entry.py")  # 파일명에 맞게 수정하세요
+            st.switch_page("pages/4_Entry.py")
 else:
+    st.info("💡 위 카드를 직접 클릭하여 스타일을 선택해주세요.")
     if st.button("← BACK", use_container_width=True):
         st.switch_page("pages/1_Cover.py")
