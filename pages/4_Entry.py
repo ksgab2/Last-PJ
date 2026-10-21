@@ -45,4 +45,4 @@ if st.button("GENERATE CATALOGUE →", type="primary", use_container_width=True)
             files=files, text=text, tags=selected_tags, aspect=st.session_state.get("aspect", "lia")
         )
         st.session_state.entry_result = result
-        st.switch_page("pages/4_Result.py")
+        st.switch_page("pages/5_Result.py")
