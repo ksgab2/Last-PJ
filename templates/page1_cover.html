@@ -5,9 +5,15 @@
             <div class="tape-strip w-20 -top-2 right-12 rotate-[1deg]"></div>
 
             <div class="flex justify-between items-start mb-8">
-                <div class="silkscreen-stamp px-2.5 py-1 text-[10px] font-bold">
-                    SILKSCREEN EDITION N° 042 / 500
-                </div>
+               <div class="silkscreen-stamp px-2.5 py-1 text-[10px] font-bold" id="ticket-display">
+                SILKSCREEN EDITION N° 042 / 500
+               </div>
+                <script>
+    // 추가: 티켓 번호 동적 할당
+                    const t = (window.PAGE_DATA || {}).ticket_no || "042";
+                    const el = document.getElementById('ticket-display');
+                    if (el) el.innerText = `SILKSCREEN EDITION N° ${t} / 500`;
+                </script>
                 <span class="font-mono text-[10px] text-archive-muted uppercase tracking-widest">CATALOGUE #04</span>
             </div>
 

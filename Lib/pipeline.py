@@ -24,6 +24,11 @@ Entry 페이지에서 받은 입력(사진, 문장, 태그, aspect)을
 """
 from __future__ import annotations
 
+import concurrent.futures
+
+from google.genai import types
+
+
 import base64
 import datetime
 from io import BytesIO
@@ -40,6 +45,54 @@ from tenacity import (
     retry_if_exception_type,
 )
 
+
+# 상수 추가
+NANO_BANANA_LITE_MODEL = st.secrets.get(
+    "NANO_BANANA_LITE_MODEL", "gemini-3.1-flash-lite-image"
+)
+
+# 페르소나별 이미지 스타일 프롬프트 (주신 가이드 반영)
+COLLAGE_STYLE_PROMPTS = {
+    "lia": (
+        "A cozy, nostalgic Parisian vintage film collage. "
+        "Warm golden hour light, soft muted tones, cinematic multi-layer composition. "
+        "Classic Parisian lifestyle, analog film grain."
+    ),
+    "ol": (
+        "A dreamy, moody, subconscious monochrome collage. "
+        "Low-saturation deep contrast, prism rainbow blurs, motion blur, halftone dots. "
+        "Experimental high-angle composition."
+    ),
+    "let": (
+        "A vibrant summer European lifestyle collage. "
+        "Bright harsh sunlight, strong sharp shadows, deep blue and warm yellow primary colors. "
+        "Kodak Portra 400 film grain, minimalist bold composition."
+    ),
+}
+
+def generate_collage_image(user_text: str, persona: str, aspect_ratio: str = "1:1") -> str:
+    """Nano Banana 2 Lite(gemini-3.1-flash-lite-image)로 콜라주 이미지를 생성해 base64 data URL로 반환."""
+    style = COLLAGE_STYLE_PROMPTS.get(persona, COLLAGE_STYLE_PROMPTS["lia"])
+    prompt = f"{style}\n\nUser's memory/text: {user_text or 'quiet everyday moment'}"
+
+    client = _get_client()
+    try:
+        response = client.models.generate_content(
+            model=NANO_BANANA_LITE_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_modalities=["TEXT", "IMAGE"],
+                image_config=types.ImageConfig(aspect_ratio=aspect_ratio),
+            ),
+        )
+        # 응답 파트에서 이미지 바이트 추출
+        for part in response.candidates[0].content.parts:
+            if part.inline_data is not None:
+                img_bytes = part.inline_data.data
+                return _bytes_to_data_url(img_bytes)
+    except Exception as e:
+        st.warning(f"콜라주 생성 실패 — 원본 사진으로 대체합니다: {e}")
+    return ""
 
 # ------------------------------------------------------------------
 # 0. 상수
@@ -72,7 +125,7 @@ FALLBACK_STORY = {
 }
 
 MAX_IMAGE_SIDE = 512
-MAX_IMAGES = 5
+MAX_IMAGES = 3
 
 
 # ------------------------------------------------------------------
@@ -246,62 +299,57 @@ def _build_image_summary_prompt(persona: str) -> str:
 # ------------------------------------------------------------------
 # 5. 메인 엔트리
 # ------------------------------------------------------------------
-def analyze_entry(
-    files=None,
-    text: str = "",
-    tags: list[str] | None = None,
-    aspect: str = "lia",
-    use_vision: bool = True,
-) -> dict:
-    """Entry 페이지에서 호출. 반환 dict는 page4/page5가 그대로 소비."""
+# ==========================================
+# [수정] analyze_entry: 병렬 처리 적용
+# ==========================================
+def analyze_entry(files=None, text: str = "", tags: list[str] | None = None, aspect: str = "lia"):
     files = list(files or [])
     tags = list(tags or [])
     aspect = aspect if aspect in PERSONA_INFO else "lia"
     text = (text or "").strip()
 
-    # 1) 이미지 준비 (EXIF 제거 + 리사이즈 + base64)
     photo_data_urls, cleaned_bytes = _prepare_photos(files)
 
-    # 2) 이미지 요약 (최대 2장, 선택)
-    image_summaries: list[str] = []
-    if use_vision and cleaned_bytes:
+    # 이미지 요약 (최대 2장)
+    image_summaries = []
+    if cleaned_bytes:
         prompt = _build_image_summary_prompt(aspect)
         for img_bytes in cleaned_bytes[:2]:
             try:
                 summary = _generate_image_summary_with_retry(prompt, img_bytes)
-                if summary:
-                    image_summaries.append(summary)
-            except Exception:
-                pass  # 요약 실패는 치명적이지 않음
+                if summary: image_summaries.append(summary)
+            except:
+                pass
 
-    # 3) 큐레토리얼 코멘트 생성
-    poetic_story = ""
-    try:
-        prompt = _build_curatorial_prompt(
-            persona=aspect,
-            text=text,
-            tags=tags,
-            image_summaries=image_summaries,
-        )
-        poetic_story = _generate_text_with_retry(prompt)
-    except Exception as e:
-        st.warning(f"큐레이션 생성 실패 — 기본 문구로 대체합니다: {e}")
-        poetic_story = ""
+    prompt_text = _build_curatorial_prompt(aspect, text, tags, image_summaries)
 
-    if not poetic_story:
-        poetic_story = FALLBACK_STORY[aspect]
+    # ★ 병렬 처리 시작 (텍스트 생성과 이미지 생성 동시 실행)
+    with st.spinner("큐레이션과 콜라주를 동시에 생성 중…"):
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_text = executor.submit(_generate_text_with_retry, prompt_text)
+            future_image = executor.submit(generate_collage_image, user_text=text, persona=aspect, aspect_ratio="1:1")
 
-    # 4) quote 폴백
+            try:
+                poetic_story = future_text.result()
+            except:
+                poetic_story = ""
+            if not poetic_story: poetic_story = FALLBACK_STORY[aspect]
+
+            try:
+                collage_url = future_image.result()
+            except:
+                collage_url = ""
+
+    final_photos = [collage_url] if collage_url else photo_data_urls
     quote = text or "창가로 들어오는 조용한 빛과 마음이 정돈되던 순간."
 
-    # 5) 결과
     return {
         "persona": aspect,
         "date": datetime.date.today().strftime("%Y.%m.%d"),
         "quote": quote,
         "poetic_story": poetic_story,
         "tags": tags if tags else ["#취향아카이브"],
-        "photos": photo_data_urls,
+        "photos": final_photos,
         "image_summaries": image_summaries,
         "likes": 0,
     }
@@ -317,3 +365,30 @@ def health_check() -> dict:
         "max_images": MAX_IMAGES,
         "max_side": MAX_IMAGE_SIDE,
     }
+
+
+# ==========================================
+# [신규] 키워드 추출 함수 (사진 + 글귀 분석)
+# ==========================================
+def extract_keywords(files, text: str) -> list[str]:
+    """사진과 글귀를 분석해 5~8개의 취향 키워드를 도출합니다."""
+    _, cleaned_bytes = _prepare_photos(files)
+    client = _get_client()
+
+    prompt = f"""사용자가 입력한 글귀: "{text or '없음'}"
+제공된 이미지들의 분위기, 색감, 사물을 분석하여 사용자의 취향을 나타내는 키워드를 5~8개 도출하세요.
+반드시 '#'으로 시작하는 한국어 단어 형태로 작성하세요. (예: #정제된침묵, #흑백필름)
+쉼표로 구분하여 키워드만 출력하세요. 다른 설명은 절대 쓰지 마세요."""
+
+    contents = [prompt]
+    for img_bytes in cleaned_bytes:
+        contents.append(types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg"))
+
+    try:
+        resp = client.models.generate_content(model=_get_model_name(), contents=contents)
+        # 결과 파싱 (쉼표 기준 분리 및 공백 제거)
+        keywords = [k.strip() for k in resp.text.replace("\n", "").split(",") if k.strip().startswith("#")]
+        return keywords[:8]  # 최대 8개
+    except Exception as e:
+        st.warning(f"키워드 추출 실패: {e}")
+        return ["#취향아카이브", "#기록", "#일상"]

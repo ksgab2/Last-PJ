@@ -51,6 +51,7 @@
     const tags = d.tags || [];
     const photos = d.photos || [];
     const mainImg = photos[0] || '';
+    // 서브 이미지는 콜라주 생성 시 없을 수 있으므로 mainImg로 폴백
     const subImg = photos[1] || mainImg;
     const date = d.date || '2026.10.19';
 
@@ -65,13 +66,13 @@
     if (persona === 'lia') {
         layout.innerHTML = `
             <div class="sm:col-span-7 contact-sheet p-2 rounded-xs">
-                <img src="${mainImg}" class="w-full h-48 sm:h-56 object-contain bg-archive-dark filter grayscale contrast-125">
+                <img src="${mainImg}" class="w-full h-48 sm:h-56 object-contain bg-archive-dark mx-auto filter grayscale contrast-125">
                 <span class="font-mono text-[8px] text-archive-craft/60 block text-right mt-1">LIA SILHOUETTE FRAME</span>
             </div>
             <div class="sm:col-span-5 flex flex-col justify-between border border-archive-craft p-4 bg-archive-paper/60">
                 <div class="font-mono text-[9px] text-archive-terracotta mb-2">FRAGMENT LAYER</div>
                 <p class="font-serif text-xs leading-relaxed text-archive-dark italic mb-3">"${quote}"</p>
-                <div class="h-20 contact-sheet p-1">
+                <div class="h-20 contact-sheet p-1 flex items-center justify-center">
                     <img src="${subImg}" class="w-full h-full object-contain bg-archive-dark opacity-80">
                 </div>
             </div>`;
@@ -79,11 +80,11 @@
         layout.innerHTML = `
             <div class="sm:col-span-5 border border-archive-craft p-3 relative bg-archive-craft/30 torn-edge-top-bottom">
                 <div class="tape-strip w-16 -top-2 left-2 rotate-[-4deg]"></div>
-                <img src="${subImg}" class="w-full h-36 object-contain bg-archive-dark border border-archive-dark/40 mb-2">
+                <img src="${subImg}" class="w-full h-36 object-contain bg-archive-dark border border-archive-dark/40 mb-2 mx-auto">
                 <span class="font-serif text-[10px] text-archive-dark block text-center italic">Scrapbook Texture Layer</span>
             </div>
             <div class="sm:col-span-7 contact-sheet p-2">
-                <img src="${mainImg}" class="w-full h-48 sm:h-56 object-contain bg-archive-dark">
+                <img src="${mainImg}" class="w-full h-48 sm:h-56 object-contain bg-archive-dark mx-auto">
                 <div class="flex justify-between font-mono text-[8px] text-archive-craft/60 mt-1">
                     <span>OL VISUAL COLLAGE</span><span>${date}</span>
                 </div>
@@ -92,8 +93,8 @@
         layout.innerHTML = `
             <div class="sm:col-span-12 contact-sheet p-3 relative">
                 <div class="grid grid-cols-2 gap-2">
-                    <img src="${mainImg}" class="w-full h-40 object-contain bg-archive-dark">
-                    <img src="${subImg}" class="w-full h-40 object-contain bg-archive-dark filter sepia-[0.3]">
+                    <img src="${mainImg}" class="w-full h-40 object-contain bg-archive-dark mx-auto">
+                    <img src="${subImg}" class="w-full h-40 object-contain bg-archive-dark mx-auto filter sepia-[0.3]">
                 </div>
                 <div class="mt-2 font-mono text-[9px] text-archive-craft/70 flex justify-between">
                     <span>SYNTHESIS OVERLAY FRAME</span><span>LET COMPONENT</span>
